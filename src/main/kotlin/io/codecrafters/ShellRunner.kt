@@ -30,8 +30,7 @@ class ShellRunner(
     commandName: String,
     argumentValues: List<String>
   ) {
-    val
-        executableFile = executableResolver.resolve(commandName) ?: return println("$commandName: not found")
+    val executableFile = executableResolver.resolve(commandName) ?: return println("$commandName: not found")
     val commandLine = buildList {
       add(executableFile.absolutePath)
       addAll(argumentValues)
