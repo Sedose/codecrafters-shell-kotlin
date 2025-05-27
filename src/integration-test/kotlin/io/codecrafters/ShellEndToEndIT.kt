@@ -62,6 +62,12 @@ class ShellEndToEndIT {
         assertEquals(42, result.exitStatus)
     }
 
+    @Test
+    fun emptyInput() {
+        val result = runSession("")
+        assertTrue(result.consoleOutput == "$ $ ")
+    }
+
     fun runSession(script: String): SessionResult {
         val originalInputStream: InputStream = System.`in`
         val originalPrintStream: PrintStream = System.out

@@ -7,7 +7,7 @@ import java.io.File
 interface CommandHandler {
     val commandName: String
 
-    fun handle(arguments: List<String>)
+    fun handle(commandPayload: String)
 }
 
 @Component
@@ -16,8 +16,8 @@ class ExitCommandHandler(
 ) : CommandHandler {
     override val commandName = "exit"
 
-    override fun handle(arguments: List<String>) {
-        exitExecutor.exit(arguments.first().toIntOrNull() ?: 0)
+    override fun handle(commandPayload: String) {
+        exitExecutor.exit(commandPayload.toIntOrNull() ?: 0)
     }
 }
 
@@ -25,8 +25,8 @@ class ExitCommandHandler(
 class EchoCommandHandler : CommandHandler {
     override val commandName = "echo"
 
-    override fun handle(arguments: List<String>) {
-        println(arguments.first())
+    override fun handle(commandPayload: String) {
+        println(commandPayload)
     }
 }
 
@@ -36,30 +36,30 @@ class TypeCommandHandler : CommandHandler {
 
     private val builtinCommands = setOf("echo", "exit", "type")
 
-    override fun handle(arguments: List<String>) {
-        val command = arguments.first().trim()
-        if (command.isEmpty()) {
+    override fun handle(commandPayload: String) {
+        val commandName = commandPayload
+        if (commandName.isEmpty()) {
             println("type: missing operand")
             return
         }
 
-        if (command in builtinCommands) {
-            println("$command is a shell builtin")
+        if (commandName in builtinCommands) {
+            println("$commandName is a shell builtin")
             return
         }
 
-        val pathVariable = System.getenv("PATH") ?: return println("$command: not found")
+        val pathVariable = System.getenv("PATH") ?: return println("$commandName: not found")
         val pathDirectories = pathVariable.split(File.pathSeparator)
 
         for (directoryPath in pathDirectories) {
             if (directoryPath.isEmpty()) continue
-            val candidate = File(directoryPath, command)
+            val candidate = File(directoryPath, commandName)
             if (candidate.exists() && candidate.canExecute()) {
-                println("$command is ${candidate.absolutePath}")
+                println("$commandName is ${candidate.absolutePath}")
                 return
             }
         }
 
-        println("$command: not found")
+        println("$commandName: not found")
     }
 }
