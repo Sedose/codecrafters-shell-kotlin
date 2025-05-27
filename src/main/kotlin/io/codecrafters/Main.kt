@@ -3,7 +3,6 @@ package io.codecrafters
 import io.codecrafters.command.CommandHandler
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.runApplication
 import org.springframework.stereotype.Component
 import java.util.Scanner
@@ -21,14 +20,15 @@ class ShellRunner(
 ) : CommandLineRunner {
   override fun run(vararg args: String) {
     val scanner = Scanner(System.`in`)
+    print("$ ")
     while (scanner.hasNextLine()) {
-      print("$ ")
       val inputLine = scanner.nextLine()
       val command = inputLine.substringBefore(delimiter = ' ')
       val arguments = inputLine.substringAfter(delimiter = ' ', missingDelimiterValue = "")
       commandHandlerMap[command]
         ?.handle(arguments)
         ?: println("$inputLine: command not found")
+      print("$ ")
     }
   }
 }
