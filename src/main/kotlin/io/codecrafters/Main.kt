@@ -16,7 +16,6 @@ fun main(args: Array<String>) {
 }
 
 @Component
-@ConditionalOnProperty(prefix = "shell", name = ["enabled"], havingValue = "true", matchIfMissing = true)
 class ShellRunner(
   private val commandHandlerMap: Map<String, CommandHandler>,
 ) : CommandLineRunner {
