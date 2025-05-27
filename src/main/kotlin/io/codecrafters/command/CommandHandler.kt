@@ -7,7 +7,7 @@ import java.io.File
 interface CommandHandler {
     val commandName: String
 
-    fun handle(arguments: String)
+    fun handle(arguments: List<String>)
 }
 
 @Component
@@ -16,8 +16,8 @@ class ExitCommandHandler(
 ) : CommandHandler {
     override val commandName = "exit"
 
-    override fun handle(arguments: String) {
-        exitExecutor.exit(arguments.toIntOrNull() ?: 0)
+    override fun handle(arguments: List<String>) {
+        exitExecutor.exit(arguments.first().toIntOrNull() ?: 0)
     }
 }
 
@@ -25,8 +25,8 @@ class ExitCommandHandler(
 class EchoCommandHandler : CommandHandler {
     override val commandName = "echo"
 
-    override fun handle(arguments: String) {
-        println(arguments)
+    override fun handle(arguments: List<String>) {
+        println(arguments.first())
     }
 }
 
@@ -36,8 +36,8 @@ class TypeCommandHandler : CommandHandler {
 
     private val builtinCommands = setOf("echo", "exit", "type")
 
-    override fun handle(arguments: String) {
-        val command = arguments.trim()
+    override fun handle(arguments: List<String>) {
+        val command = arguments.first().trim()
         if (command.isEmpty()) {
             println("type: missing operand")
             return

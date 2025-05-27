@@ -9,17 +9,19 @@ import java.io.IOException
 class ShellRunner(
     private val commandHandlerMap: Map<String, CommandHandler>,
 ) : CommandLineRunner {
+  private val splitWordsRegex = Regex("\\s+")
+
     override fun run(vararg args: String) {
         while (true) {
             print("$ ")
             val inputLine = readLine() ?: break
             val trimmedInput = inputLine.trim()
             if (trimmedInput.isEmpty()) continue
-            val tokens = trimmedInput.split(Regex("\\s+"))
+            val tokens = trimmedInput.split(splitWordsRegex)
             val commandName = tokens.first()
             val argumentList = tokens.drop(1)
             commandHandlerMap[commandName]
-                ?.handle(argumentList.joinToString(" "))
+                ?.handle(argumentList)
                 ?: executeExternalProgram(commandName, argumentList)
         }
     }
@@ -28,13 +30,9 @@ class ShellRunner(
         commandName: String,
         argumentList: List<String>,
     ) {
-        val fullCommand =
-            buildList {
-                add(commandName)
-                addAll(argumentList)
-            }
+      val commandWithArguments = listOf(commandName) + argumentList
         try {
-            ProcessBuilder(fullCommand)
+            ProcessBuilder(commandWithArguments)
                 .inheritIO()
                 .start()
                 .waitFor()
