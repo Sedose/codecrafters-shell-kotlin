@@ -26,15 +26,16 @@ class ShellRunner(
   }
 
   private fun executeExternalProgram(commandName: String, argumentList: List<String>) {
-    val fullCommand = buildList<String> {
-      add(commandName)
-      addAll(argumentList)
-    }
+    val fullCommand =
+      buildList {
+        add(commandName)
+        addAll(argumentList)
+      }
     try {
-      val process = ProcessBuilder(fullCommand)
+      ProcessBuilder(fullCommand)
         .inheritIO()
         .start()
-      process.waitFor()
+        .waitFor()
     } catch (_: IOException) {
       println("$commandName: not found")
     }
