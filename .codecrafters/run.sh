@@ -8,4 +8,4 @@
 
 set -e # Exit on failure
 
-exec java -jar /tmp/codecrafters-build-dir/build-your-own-shell.jar "$@"
+exec java -jar target/build-your-own-interpreter-1.0.jar "$@"
