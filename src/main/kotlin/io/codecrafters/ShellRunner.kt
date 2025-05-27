@@ -17,11 +17,9 @@ class ShellRunner(
       val inputLine = readLine() ?: break
       val trimmedLine = inputLine.trim()
       if (trimmedLine.isEmpty()) continue
-
       val tokens = trimmedLine.split(Regex("\\s+"))
       val commandName = tokens.first()
       val argumentValues = tokens.drop(1)
-
       commandHandlerMap[commandName]
         ?.handle(argumentValues.joinToString(" "))
         ?: executeExternalProgram(commandName, argumentValues)
@@ -31,12 +29,10 @@ class ShellRunner(
   private fun executeExternalProgram(commandName: String, argumentValues: List<String>) {
     val executableFile = executableResolver.resolve(commandName)
       ?: return println("$commandName: not found")
-
     val commandLine = buildList {
       add(executableFile.absolutePath)
       addAll(argumentValues)
     }
-
     val process = ProcessBuilder(commandLine).inheritIO().start()
     process.waitFor()
   }
