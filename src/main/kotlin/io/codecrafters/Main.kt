@@ -4,6 +4,7 @@ import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.stereotype.Component
+import kotlin.system.exitProcess
 
 @SpringBootApplication
 class Main
@@ -14,10 +15,17 @@ fun main(args: Array<String>) {
 
 @Component
 class ShellRunner : CommandLineRunner {
+
   override fun run(vararg args: String) {
     while (true) {
       print("$ ")
-      println(readln() + ": command not found")
+      val inputLine = readln()
+
+      if (inputLine == "exit 0") {
+        exitProcess(0)
+      }
+
+      println("$inputLine: command not found")
     }
   }
 }
