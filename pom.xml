@@ -160,7 +160,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>io.codecrafters.InterpreterApplicationKt</mainClass>
+                    <mainClass>io.codecrafters.MainKt</mainClass>
                 </configuration>
                 <executions>
                     <execution>
