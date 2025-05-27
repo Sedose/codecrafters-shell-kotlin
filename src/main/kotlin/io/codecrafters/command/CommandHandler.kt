@@ -35,7 +35,7 @@ class TypeCommandHandler : CommandHandler {
 
   override fun handle(arguments: String) {
     when (arguments) {
-      "echo", "exit" -> println("$arguments is a shell builtin")
+      "echo", "exit", "type" -> println("$arguments is a shell builtin")
       else -> println("$arguments: not found")
     }
   }
