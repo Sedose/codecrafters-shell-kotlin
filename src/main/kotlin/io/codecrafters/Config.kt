@@ -8,14 +8,14 @@ import kotlin.system.exitProcess
 
 @Configuration
 class Config {
-  @Bean
-  fun commandHandlerMap(commandHandlers: List<CommandHandler>): Map<String, CommandHandler> =
-    commandHandlers.associateBy { it.commandName }
+    @Bean
+    fun commandHandlerMap(commandHandlers: List<CommandHandler>): Map<String, CommandHandler> =
+        commandHandlers.associateBy { it.commandName }
 
-  @Bean
-  @ConditionalOnMissingBean(ExitExecutor::class)
-  fun realExitExecutor(): ExitExecutor =
-    ExitExecutor { status ->
-      exitProcess(status)
-    }
+    @Bean
+    @ConditionalOnMissingBean(ExitExecutor::class)
+    fun realExitExecutor(): ExitExecutor =
+        ExitExecutor { status ->
+            exitProcess(status)
+        }
 }

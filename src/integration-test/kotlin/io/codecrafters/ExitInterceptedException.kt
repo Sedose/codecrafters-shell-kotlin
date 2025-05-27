@@ -1,5 +1,5 @@
 package io.codecrafters
 
 class ExitInterceptedException(
-  val status: Int,
+    val status: Int,
 ) : RuntimeException()

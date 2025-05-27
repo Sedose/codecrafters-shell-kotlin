@@ -6,10 +6,10 @@ import org.springframework.context.annotation.Primary
 
 @TestConfiguration
 class TestExitConfig {
-  @Bean
-  @Primary
-  fun testExitExecutor(): ExitExecutor =
-    ExitExecutor { status ->
-      throw ExitInterceptedException(status)
-    }
+    @Bean
+    @Primary
+    fun testExitExecutor(): ExitExecutor =
+        ExitExecutor { status ->
+            throw ExitInterceptedException(status)
+        }
 }
