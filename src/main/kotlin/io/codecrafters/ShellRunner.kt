@@ -26,9 +26,12 @@ class ShellRunner(
     }
   }
 
-  private fun executeExternalProgram(commandName: String, argumentValues: List<String>) {
-    val executableFile = executableResolver.resolve(commandName)
-      ?: return println("$commandName: not found")
+  private fun executeExternalProgram(
+    commandName: String,
+    argumentValues: List<String>
+  ) {
+    val
+        executableFile = executableResolver.resolve(commandName) ?: return println("$commandName: not found")
     val commandLine = buildList {
       add(executableFile.absolutePath)
       addAll(argumentValues)
