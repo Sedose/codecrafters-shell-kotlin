@@ -3,12 +3,10 @@ package io.codecrafters
 import io.codecrafters.command.CommandHandler
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
-import java.util.Scanner
 
 @Component
 class ShellRunner(
   private val commandHandlerMap: Map<String, CommandHandler>,
-  private val executableResolver: ExecutableResolver,
 ) : CommandLineRunner {
 
   override fun run(vararg args: String) {
@@ -26,16 +24,15 @@ class ShellRunner(
     }
   }
 
-  private fun executeExternalProgram(
-    commandName: String,
-    argumentValues: List<String>
-  ) {
-    val executableFile = executableResolver.resolve(commandName) ?: return println("$commandName: not found")
-    val commandLine = buildList {
-      add(executableFile.absolutePath)
-      addAll(argumentValues)
-    }
-    val process = ProcessBuilder(commandLine).inheritIO().start()
-    process.waitFor()
+  private fun executeExternalProgram(commandName: String, argumentValues: List<String>) {
+    val commandLine =
+      buildList {
+        add(commandName)
+        addAll(argumentValues)
+      }
+    ProcessBuilder(commandLine)
+      .inheritIO()
+      .start()
+      .waitFor()
   }
 }
