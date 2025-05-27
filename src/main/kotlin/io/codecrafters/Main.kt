@@ -21,11 +21,19 @@ class ShellRunner : CommandLineRunner {
       print("$ ")
       val inputLine = readln()
 
-      if (inputLine == "exit 0") {
-        exitProcess(0)
-      }
+      when {
+        inputLine.startsWith("exit") -> {
+          val status = inputLine.substringAfter("exit ").toInt()
+          exitProcess(status)
+        }
 
-      println("$inputLine: command not found")
+        inputLine.startsWith("echo") -> {
+          val printable = inputLine.substringAfter("echo ")
+          println(printable)
+        }
+
+        else -> println("$inputLine: command not found")
+      }
     }
   }
 }
