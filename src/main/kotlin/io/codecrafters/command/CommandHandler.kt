@@ -2,6 +2,7 @@ package io.codecrafters.command
 
 import io.codecrafters.ExitExecutor
 import org.springframework.stereotype.Component
+import java.io.File
 
 interface CommandHandler {
   val commandName: String
@@ -33,10 +34,32 @@ class EchoCommandHandler : CommandHandler {
 class TypeCommandHandler : CommandHandler {
   override val commandName = "type"
 
+  private val builtinCommands = setOf("echo", "exit", "type")
+
   override fun handle(arguments: String) {
-    when (arguments) {
-      "echo", "exit", "type" -> println("$arguments is a shell builtin")
-      else -> println("$arguments: not found")
+    val command = arguments.trim()
+    if (command.isEmpty()) {
+      println("type: missing operand")
+      return
     }
+
+    if (command in builtinCommands) {
+      println("$command is a shell builtin")
+      return
+    }
+
+    val pathVariable = System.getenv("PATH") ?: return println("$command: not found")
+    val pathDirectories = pathVariable.split(File.pathSeparator)
+
+    for (directoryPath in pathDirectories) {
+      if (directoryPath.isEmpty()) continue
+      val candidate = File(directoryPath, command)
+      if (candidate.exists() && candidate.canExecute()) {
+        println("$command is ${candidate.absolutePath}")
+        return
+      }
+    }
+
+    println("$command: not found")
   }
 }
