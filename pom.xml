@@ -155,6 +155,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <append>true</append>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

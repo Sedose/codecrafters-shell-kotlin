@@ -31,10 +31,16 @@ class ShellRunner(
     ) {
         val commandWithArguments = listOf(commandName) + argumentList.split(splitWordsRegex)
         try {
-            ProcessBuilder(commandWithArguments)
-                .inheritIO()
-                .start()
-                .waitFor()
+            val process =
+                ProcessBuilder(commandWithArguments)
+                    .redirectErrorStream(true)
+                    .start()
+            process.inputStream.bufferedReader().useLines { lines ->
+                for (line in lines) {
+                    println(line)
+                }
+            }
+            process.waitFor()
         } catch (_: IOException) {
             println("$commandName: not found")
         }

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.boot.SpringApplication
+import org.springframework.context.ConfigurableApplicationContext
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -19,7 +20,19 @@ class ShellEndToEndIT {
                 exit
             """,
             )
-        assertTrue(result.consoleOutput.contains("Hello, Kotlin End-to-End Test"))
+        assertTrue("Hello, Kotlin End-to-End Test" in result.consoleOutput)
+    }
+
+    @Test
+    fun echoCommandPrintsSuppliedArguments2() {
+        val result =
+            runSession(
+                """
+                echo asdasdasd
+                exit
+            """,
+            )
+        assertTrue("asdasdasd" in result.consoleOutput)
     }
 
     @Test
@@ -40,7 +53,7 @@ class ShellEndToEndIT {
                 "type is a shell builtin",
             )
         for (builtinStatement in expectedBuiltins) {
-            assertTrue(result.consoleOutput.contains(builtinStatement))
+            assertTrue(builtinStatement in result.consoleOutput)
         }
     }
 
@@ -53,7 +66,7 @@ class ShellEndToEndIT {
                 exit
             """,
             )
-        assertTrue(result.consoleOutput.contains("foobar: not found"))
+        assertTrue("foobar: not found" in result.consoleOutput)
     }
 
     @Test
@@ -66,6 +79,27 @@ class ShellEndToEndIT {
     fun emptyInput() {
         val result = runSession("")
         assertTrue(result.consoleOutput == "$ $ ")
+        assertTrue(result.exitStatus == 0)
+    }
+
+    @Test
+    fun handleExternalCommand() {
+        val osName = System.getProperty("os.name").lowercase()
+        val (externalCommand, uniqueMessage) =
+            if (osName.lowercase().contains("win")) {
+                "cmd /c echo" to "cross-platform-ok"
+            } else {
+                "/bin/echo" to "cross-platform-ok"
+            }
+        val result =
+            runSession(
+                """
+            $externalCommand $uniqueMessage
+            exit
+            """,
+            )
+        assertTrue(uniqueMessage in result.consoleOutput)
+        assertEquals(0, result.exitStatus)
     }
 
     fun runSession(script: String): SessionResult {
@@ -76,15 +110,17 @@ class ShellEndToEndIT {
         System.setIn(ByteArrayInputStream((script.trimIndent() + "\n").toByteArray()))
         System.setOut(PrintStream(capturedOutput))
 
+        var ctx: ConfigurableApplicationContext? = null
         val status =
             try {
-                SpringApplication.run(arrayOf(Main::class.java, TestExitConfig::class.java), emptyArray<String>())
+                ctx = SpringApplication.run(arrayOf(Main::class.java, TestExitConfig::class.java), emptyArray<String>())
                 0
             } catch (intercepted: ExitInterceptedException) {
                 intercepted.status
             } finally {
                 System.setIn(originalInputStream)
                 System.setOut(originalPrintStream)
+                ctx?.close()
             }
 
         return SessionResult(capturedOutput.toString(), status)
