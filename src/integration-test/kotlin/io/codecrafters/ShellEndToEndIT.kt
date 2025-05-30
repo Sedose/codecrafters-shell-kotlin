@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.PrintStream
+import java.nio.file.Paths
 
 class ShellEndToEndIT {
     @Test
@@ -100,6 +101,18 @@ class ShellEndToEndIT {
             )
         assertTrue(uniqueMessage in result.consoleOutput)
         assertEquals(0, result.exitStatus)
+    }
+
+    @Test
+    fun printsCurrentDirectory() {
+        val expected = Paths.get("").toAbsolutePath().normalize().toString()
+        val result = runSession(
+            """
+            pwd
+            exit
+            """,
+        )
+        assertTrue(expected in result.consoleOutput)
     }
 
     fun runSession(script: String): SessionResult {

@@ -3,6 +3,7 @@ package io.codecrafters.command
 import io.codecrafters.ExitExecutor
 import org.springframework.stereotype.Component
 import java.io.File
+import java.nio.file.Paths
 
 interface CommandHandler {
     val commandName: String
@@ -34,7 +35,7 @@ class EchoCommandHandler : CommandHandler {
 class TypeCommandHandler : CommandHandler {
     override val commandName = "type"
 
-    private val builtinCommands = setOf("echo", "exit", "type")
+    private val builtinCommands = setOf("echo", "exit", "type", "pwd")
 
     override fun handle(commandPayload: String) {
         val commandName = commandPayload
@@ -61,5 +62,15 @@ class TypeCommandHandler : CommandHandler {
         }
 
         println("$commandName: not found")
+    }
+}
+
+@Component
+class PwdCommandHandler : CommandHandler {
+    override val commandName: String = "pwd"
+
+    override fun handle(commandPayload: String) {
+        val currentDirectory = Paths.get("").toAbsolutePath().normalize()
+        println(currentDirectory.toString())
     }
 }
