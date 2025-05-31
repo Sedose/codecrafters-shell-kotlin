@@ -105,13 +105,19 @@ class ShellEndToEndIT {
 
     @Test
     fun printsCurrentDirectory() {
-        val expected = Paths.get("").toAbsolutePath().normalize().toString()
-        val result = runSession(
-            """
+        val expected =
+            Paths
+                .get("")
+                .toAbsolutePath()
+                .normalize()
+                .toString()
+        val result =
+            runSession(
+                """
             pwd
             exit
             """,
-        )
+            )
         assertTrue(expected in result.consoleOutput)
     }
 

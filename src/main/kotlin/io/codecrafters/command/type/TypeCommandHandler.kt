@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component
 class TypeCommandHandler(
     private val executableLocator: ExecutableLocator,
 ) : CommandHandler {
-
     override val commandName: String = "type"
 
     override fun handle(commandPayload: String) {
