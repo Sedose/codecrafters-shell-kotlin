@@ -1,5 +1,6 @@
 package io.codecrafters.command.type
 
+import io.codecrafters.BUILTIN_COMMANDS
 import io.codecrafters.command.CommandHandler
 import org.springframework.stereotype.Component
 
@@ -21,15 +22,11 @@ class TypeCommandHandler(
             return
         }
 
-        val executablePath = executableLocator.findExecutable(requestedCommand)
-        if (executablePath != null) {
-            println("$requestedCommand is $executablePath")
-        } else {
-            println("$requestedCommand: not found")
-        }
-    }
+        val lookupResult = executableLocator.findExecutable(requestedCommand)
 
-    companion object {
-        private val BUILTIN_COMMANDS = setOf("echo", "exit", "type", "pwd")
+        when (lookupResult) {
+            is ExecutableFound -> println("$requestedCommand is ${lookupResult.absolutePath}")
+            ExecutableNotFound -> println("$requestedCommand: not found")
+        }
     }
 }
