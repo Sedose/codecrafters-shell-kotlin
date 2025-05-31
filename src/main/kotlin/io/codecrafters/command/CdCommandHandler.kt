@@ -10,24 +10,28 @@ class CdCommandHandler(
     private val shellState: ShellState,
 ) : CommandHandler {
 
-    override val commandName: String = "cd"
+    override val commandName = "cd"
 
     override fun handle(commandPayload: String) {
         val requested = commandPayload.trim()
 
-        if (requested.isEmpty()) {
-            println("cd: $requested: No such file or directory")
-            return
+        val resolvedPath = if (requested == "~") {
+            val homeDirectory = System.getenv("HOME")
+                ?: return println("cd: HOME environment variable not set")
+            Paths.get(homeDirectory)
+        } else {
+            val requestedPath = Paths.get(requested)
+            if (requestedPath.isAbsolute) {
+                requestedPath
+            } else {
+                shellState.currentDirectory.resolve(requestedPath)
+            }
         }
 
-        val rawTarget = Paths.get(requested).let { p ->
-            if (p.isAbsolute) p else shellState.currentDirectory.resolve(p)
-        }
+        val normalizedTarget = resolvedPath.normalize()
 
-        val target = rawTarget.normalize()
-
-        if (Files.isDirectory(target)) {
-            shellState.currentDirectory = target
+        if (Files.isDirectory(normalizedTarget)) {
+            shellState.currentDirectory = normalizedTarget
         } else {
             println("cd: $requested: No such file or directory")
         }

@@ -6,14 +6,12 @@ import io.codecrafters.dto.ExternalProgramSuccess
 import io.codecrafters.external.ExternalProgramExecutor
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
-import java.util.regex.Pattern
 
 @Component
 class ShellRunner(
     private val commandHandlerMap: Map<String, CommandHandler>,
     private val externalProgramExecutor: ExternalProgramExecutor,
 ) : CommandLineRunner {
-    private val argumentSplitPattern: Pattern = Pattern.compile("\\s+")
 
     override fun run(vararg args: String) {
         while (true) {
@@ -23,10 +21,8 @@ class ShellRunner(
             if (trimmedInput.isEmpty()) {
                 continue
             }
-
             val commandName = trimmedInput.substringBefore(" ")
             val commandPayload = trimmedInput.substringAfter(" ")
-
             commandHandlerMap[commandName]
                 ?.handle(commandPayload)
                 ?: handleExternalCommand(commandName, commandPayload)
