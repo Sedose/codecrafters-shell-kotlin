@@ -9,22 +9,27 @@ import java.nio.file.Paths
 class CdCommandHandler(
     private val shellState: ShellState,
 ) : CommandHandler {
-    override val commandName = "cd"
+
+    override val commandName: String = "cd"
 
     override fun handle(commandPayload: String) {
-        val requestedPath = commandPayload.trim()
+        val requested = commandPayload.trim()
 
-        if (requestedPath.isEmpty() || !requestedPath.startsWith("/")) {
-            println("cd: $requestedPath: No such file or directory")
+        if (requested.isEmpty()) {
+            println("cd: $requested: No such file or directory")
             return
         }
 
-        val target = Paths.get(requestedPath).normalize()
+        val rawTarget = Paths.get(requested).let { p ->
+            if (p.isAbsolute) p else shellState.currentDirectory.resolve(p)
+        }
+
+        val target = rawTarget.normalize()
 
         if (Files.isDirectory(target)) {
             shellState.currentDirectory = target
         } else {
-            println("cd: $requestedPath: No such file or directory")
+            println("cd: $requested: No such file or directory")
         }
     }
 }
