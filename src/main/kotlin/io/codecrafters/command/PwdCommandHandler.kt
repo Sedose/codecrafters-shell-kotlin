@@ -5,7 +5,7 @@ import java.nio.file.Paths
 
 @Component
 class PwdCommandHandler : CommandHandler {
-    override val commandName: String = "pwd"
+    override val commandName = "pwd"
 
     override fun handle(commandPayload: String) {
         val currentDirectory = Paths.get("").toAbsolutePath().normalize()

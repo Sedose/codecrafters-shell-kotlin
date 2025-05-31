@@ -1,12 +1,13 @@
 package io.codecrafters.command.type
 
-import io.codecrafters.BUILTIN_COMMANDS
 import io.codecrafters.command.CommandHandler
+import io.codecrafters.dto.CommandNames
 import org.springframework.stereotype.Component
 
 @Component
 class TypeCommandHandler(
     private val executableLocator: ExecutableLocator,
+    private val commandNames: CommandNames,
 ) : CommandHandler {
     override val commandName: String = "type"
 
@@ -17,7 +18,7 @@ class TypeCommandHandler(
             return
         }
 
-        if (requestedCommand in BUILTIN_COMMANDS) {
+        if (requestedCommand in commandNames.commandNames) {
             println("$requestedCommand is a shell builtin")
             return
         }
