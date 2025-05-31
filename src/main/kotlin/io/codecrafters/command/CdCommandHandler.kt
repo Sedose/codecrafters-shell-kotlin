@@ -1,12 +1,14 @@
 package io.codecrafters.command
 
+import io.codecrafters.state.ShellState
 import org.springframework.stereotype.Component
 import java.nio.file.Files
 import java.nio.file.Paths
 
 @Component
-class CdCommandHandler : CommandHandler {
-
+class CdCommandHandler(
+    private val shellState: ShellState,
+) : CommandHandler {
     override val commandName = "cd"
 
     override fun handle(commandPayload: String) {
@@ -20,7 +22,7 @@ class CdCommandHandler : CommandHandler {
         val target = Paths.get(requestedPath).normalize()
 
         if (Files.isDirectory(target)) {
-            System.setProperty("user.dir", target.toString())
+            shellState.currentDirectory = target
         } else {
             println("cd: $requestedPath: No such file or directory")
         }

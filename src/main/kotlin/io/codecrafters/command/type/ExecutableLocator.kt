@@ -17,7 +17,11 @@ class ExecutableLocator {
                 continue
             }
 
-            val candidateExecutable = File(directory, executableName)
+            val candidateExecutable =
+                if (File(executableName).isAbsolute)
+                    File(executableName)
+                else
+                    File(directory, executableName)
             if (candidateExecutable.exists() && candidateExecutable.canExecute()) {
                 return ExecutableFound(candidateExecutable.absolutePath)
             }

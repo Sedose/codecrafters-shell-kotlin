@@ -1,17 +1,17 @@
 package io.codecrafters.command.type
 
 import io.codecrafters.command.CommandHandler
-import io.codecrafters.dto.CommandNames
 import io.codecrafters.dto.ExecutableFound
 import io.codecrafters.dto.ExecutableNotFound
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
 
 @Component
 class TypeCommandHandler(
     private val executableLocator: ExecutableLocator,
-    private val commandNames: CommandNames,
+    private val commandHandlerMap: ObjectProvider<Map<String, CommandHandler>>,
 ) : CommandHandler {
-    override val commandName: String = "type"
+    override val commandName = "type"
 
     override fun handle(commandPayload: String) {
         val requestedCommand = commandPayload.trim()
@@ -20,14 +20,13 @@ class TypeCommandHandler(
             return
         }
 
-        if (requestedCommand in commandNames.commandNames) {
+        val builtinCommandNames = commandHandlerMap.getObject().keys
+        if (requestedCommand in builtinCommandNames) {
             println("$requestedCommand is a shell builtin")
             return
         }
 
-        val lookupResult = executableLocator.findExecutable(requestedCommand)
-
-        when (lookupResult) {
+        when (val lookupResult = executableLocator.findExecutable(requestedCommand)) {
             is ExecutableFound -> println("$requestedCommand is ${lookupResult.absolutePath}")
             ExecutableNotFound -> println("$requestedCommand: not found")
         }
