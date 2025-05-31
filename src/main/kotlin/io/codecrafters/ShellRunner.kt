@@ -39,7 +39,9 @@ class ShellRunner(
     ) {
         when (externalProgramExecutor.execute(commandName, commandPayload)) {
             is ExternalProgramNotFound -> println("$commandName: not found")
-            is ExternalProgramSuccess -> println("External program succeed")
+            is ExternalProgramSuccess -> {
+                // no-op
+            }
         }
     }
 }
