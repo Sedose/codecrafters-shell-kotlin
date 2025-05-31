@@ -1,4 +1,4 @@
-package io.codecrafters.external
+package io.codecrafters.dto
 
 sealed interface ExternalProgramExecutionResult
 

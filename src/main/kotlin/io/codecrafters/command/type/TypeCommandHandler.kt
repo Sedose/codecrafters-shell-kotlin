@@ -2,6 +2,8 @@ package io.codecrafters.command.type
 
 import io.codecrafters.command.CommandHandler
 import io.codecrafters.dto.CommandNames
+import io.codecrafters.dto.ExecutableFound
+import io.codecrafters.dto.ExecutableNotFound
 import org.springframework.stereotype.Component
 
 @Component

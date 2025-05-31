@@ -1,4 +1,4 @@
-package io.codecrafters.command.type
+package io.codecrafters.dto
 
 sealed interface ExecutableLookupResult
 

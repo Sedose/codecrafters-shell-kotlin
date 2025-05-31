@@ -1,5 +1,8 @@
 package io.codecrafters.external
 
+import io.codecrafters.dto.ExternalProgramExecutionResult
+import io.codecrafters.dto.ExternalProgramNotFound
+import io.codecrafters.dto.ExternalProgramSuccess
 import org.springframework.stereotype.Component
 import java.util.regex.Pattern
 import java.io.IOException

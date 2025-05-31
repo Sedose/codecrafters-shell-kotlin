@@ -1,9 +1,9 @@
 package io.codecrafters
 
 import io.codecrafters.command.CommandHandler
+import io.codecrafters.dto.ExternalProgramNotFound
+import io.codecrafters.dto.ExternalProgramSuccess
 import io.codecrafters.external.ExternalProgramExecutor
-import io.codecrafters.external.ExternalProgramNotFound
-import io.codecrafters.external.ExternalProgramSuccess
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 import java.util.regex.Pattern

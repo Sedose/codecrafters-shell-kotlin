@@ -1,5 +1,8 @@
 package io.codecrafters.command.type
 
+import io.codecrafters.dto.ExecutableFound
+import io.codecrafters.dto.ExecutableLookupResult
+import io.codecrafters.dto.ExecutableNotFound
 import org.springframework.stereotype.Component
 import java.io.File
 
