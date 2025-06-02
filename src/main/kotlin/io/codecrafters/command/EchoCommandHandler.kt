@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 class EchoCommandHandler : CommandHandler {
     override val commandName = "echo"
 
-    override fun handle(commandPayload: String) {
-        println(commandPayload)
+    override fun handle(arguments: List<String>) {
+        println(arguments.joinToString(" "))
     }
 }

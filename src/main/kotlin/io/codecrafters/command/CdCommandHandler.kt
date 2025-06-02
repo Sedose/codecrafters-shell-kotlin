@@ -9,24 +9,25 @@ import java.nio.file.Paths
 class CdCommandHandler(
     private val shellState: ShellState,
 ) : CommandHandler {
-
     override val commandName = "cd"
 
-    override fun handle(commandPayload: String) {
-        val requested = commandPayload.trim()
+    override fun handle(arguments: List<String>) {
+        val requested = arguments.first().trim()
 
-        val resolvedPath = if (requested == "~") {
-            val homeDirectory = System.getenv("HOME")
-                ?: return println("cd: HOME environment variable not set")
-            Paths.get(homeDirectory)
-        } else {
-            val requestedPath = Paths.get(requested)
-            if (requestedPath.isAbsolute) {
-                requestedPath
+        val resolvedPath =
+            if (requested == "~") {
+                val homeDirectory =
+                    System.getenv("HOME")
+                        ?: return println("cd: HOME environment variable not set")
+                Paths.get(homeDirectory)
             } else {
-                shellState.currentDirectory.resolve(requestedPath)
+                val requestedPath = Paths.get(requested)
+                if (requestedPath.isAbsolute) {
+                    requestedPath
+                } else {
+                    shellState.currentDirectory.resolve(requestedPath)
+                }
             }
-        }
 
         val normalizedTarget = resolvedPath.normalize()
 

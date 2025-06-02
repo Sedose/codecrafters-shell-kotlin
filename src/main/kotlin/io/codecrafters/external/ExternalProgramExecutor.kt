@@ -5,20 +5,17 @@ import io.codecrafters.dto.ExternalProgramNotFound
 import io.codecrafters.dto.ExternalProgramSuccess
 import io.codecrafters.state.ShellState
 import org.springframework.stereotype.Component
-import java.util.regex.Pattern
 import java.io.IOException
 
 @Component
- class ExternalProgramExecutor(
+class ExternalProgramExecutor(
     private val shellState: ShellState,
-    private val argumentSplitPattern: Pattern = Pattern.compile("\\s+"),
-     ) {
+) {
     fun execute(
         commandName: String,
-        argumentList: String,
+        arguments: List<String>,
     ): ExternalProgramExecutionResult {
-        val commandWithArguments =
-            listOf(commandName) + argumentSplitPattern.split(argumentList).filter { it.isNotEmpty() }
+        val commandWithArguments = listOf(commandName) + arguments
 
         return try {
             val process =

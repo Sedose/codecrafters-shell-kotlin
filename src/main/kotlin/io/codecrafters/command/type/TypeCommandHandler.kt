@@ -13,8 +13,8 @@ class TypeCommandHandler(
 ) : CommandHandler {
     override val commandName = "type"
 
-    override fun handle(commandPayload: String) {
-        val requestedCommand = commandPayload.trim()
+    override fun handle(arguments: List<String>) {
+        val requestedCommand = arguments.firstOrNull()?.trim() ?: ""
         if (requestedCommand.isEmpty()) {
             println("type: missing operand")
             return

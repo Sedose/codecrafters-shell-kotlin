@@ -9,7 +9,7 @@ class PwdCommandHandler(
 ) : CommandHandler {
     override val commandName = "pwd"
 
-    override fun handle(commandPayload: String) {
+    override fun handle(arguments: List<String>) {
         println(shellState.currentDirectory)
     }
 }

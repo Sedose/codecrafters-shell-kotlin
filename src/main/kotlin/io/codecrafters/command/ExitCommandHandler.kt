@@ -9,7 +9,7 @@ class ExitCommandHandler(
 ) : CommandHandler {
     override val commandName = "exit"
 
-    override fun handle(commandPayload: String) {
-        exitExecutor.exit(commandPayload.toIntOrNull() ?: 0)
+    override fun handle(arguments: List<String>) {
+        exitExecutor.exit(arguments.first().toIntOrNull() ?: 0)
     }
 }

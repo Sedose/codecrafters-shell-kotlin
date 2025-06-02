@@ -3,5 +3,5 @@ package io.codecrafters.command
 interface CommandHandler {
     val commandName: String
 
-    fun handle(commandPayload: String)
+    fun handle(arguments: List<String>)
 }

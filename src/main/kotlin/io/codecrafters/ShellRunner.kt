@@ -4,6 +4,7 @@ import io.codecrafters.command.CommandHandler
 import io.codecrafters.dto.ExternalProgramNotFound
 import io.codecrafters.dto.ExternalProgramSuccess
 import io.codecrafters.external.ExternalProgramExecutor
+import io.codecrafters.parser.CommandParser
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 
@@ -11,8 +12,8 @@ import org.springframework.stereotype.Component
 class ShellRunner(
     private val commandHandlerMap: Map<String, CommandHandler>,
     private val externalProgramExecutor: ExternalProgramExecutor,
+    private val commandParser: CommandParser,
 ) : CommandLineRunner {
-
     override fun run(vararg args: String) {
         while (true) {
             print("$ ")
@@ -21,19 +22,18 @@ class ShellRunner(
             if (trimmedInput.isEmpty()) {
                 continue
             }
-            val commandName = trimmedInput.substringBefore(" ")
-            val commandPayload = trimmedInput.substringAfter(" ")
+            val (commandName, arguments) = commandParser.parse(trimmedInput)
             commandHandlerMap[commandName]
-                ?.handle(commandPayload)
-                ?: handleExternalCommand(commandName, commandPayload)
+                ?.handle(arguments)
+                ?: handleExternalCommand(commandName, arguments)
         }
     }
 
     private fun handleExternalCommand(
         commandName: String,
-        commandPayload: String,
+        arguments: List<String>,
     ) {
-        when (externalProgramExecutor.execute(commandName, commandPayload)) {
+        when (externalProgramExecutor.execute(commandName, arguments)) {
             is ExternalProgramNotFound -> println("$commandName: not found")
             is ExternalProgramSuccess -> {
                 // no-op
