@@ -9,24 +9,23 @@ import java.io.File
 @Component
 class ExecutableLocator {
     fun findExecutable(executableName: String): ExecutableLookupResult {
-        val environmentPath = System.getenv("PATH") ?: return ExecutableNotFound
-        val pathDirectories = environmentPath.split(File.pathSeparator)
-
-        for (directory in pathDirectories) {
-            if (directory.isEmpty()) {
-                continue
-            }
-
-            val candidateExecutable =
-                if (File(executableName).isAbsolute) {
-                    File(executableName)
-                } else {
-                    File(directory, executableName)
-                }
-            if (candidateExecutable.exists() && candidateExecutable.canExecute()) {
-                return ExecutableFound(candidateExecutable.absolutePath)
-            }
-        }
-        return ExecutableNotFound
+        return (System.getenv("PATH") ?: return ExecutableNotFound)
+            .split(File.pathSeparator)
+            .asSequence()
+            .filter { it.isNotBlank() }
+            .map { resolveCandidateExecutable(it, executableName) }
+            .firstOrNull { it.exists() && it.canExecute() }
+            ?.let { ExecutableFound(it.absolutePath) }
+            ?: ExecutableNotFound
     }
+
+    private fun resolveCandidateExecutable(
+        directoryPath: String,
+        executableName: String,
+    ): File =
+        if (File(executableName).isAbsolute) {
+            File(executableName)
+        } else {
+            File(directoryPath, executableName)
+        }
 }
