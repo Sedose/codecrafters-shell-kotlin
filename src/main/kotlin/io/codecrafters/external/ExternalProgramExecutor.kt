@@ -3,7 +3,7 @@ package io.codecrafters.external
 import io.codecrafters.dto.ExternalProgramExecutionResult
 import io.codecrafters.dto.ExternalProgramNotFound
 import io.codecrafters.dto.ExternalProgramSuccess
-import io.codecrafters.state.ShellState
+import io.codecrafters.shared_mutable_state.ShellState
 import org.springframework.stereotype.Component
 import java.io.IOException
 

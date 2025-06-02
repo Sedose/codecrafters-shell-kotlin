@@ -1,8 +1,9 @@
 package io.codecrafters.command
 
-import io.codecrafters.state.ShellState
+import io.codecrafters.shared_mutable_state.ShellState
 import org.springframework.stereotype.Component
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 
 @Component
@@ -12,29 +13,38 @@ class CdCommandHandler(
     override val commandName = "cd"
 
     override fun handle(arguments: List<String>) {
-        val requested = arguments.first().trim()
+        val rawPath = arguments.firstOrNull()?.trim().orEmpty()
 
-        val resolvedPath =
-            if (requested == "~") {
-                val homeDirectory =
-                    System.getenv("HOME")
-                        ?: return println("cd: HOME environment variable not set")
-                Paths.get(homeDirectory)
-            } else {
-                val requestedPath = Paths.get(requested)
-                if (requestedPath.isAbsolute) {
-                    requestedPath
-                } else {
-                    shellState.currentDirectory.resolve(requestedPath)
-                }
+        if (rawPath.isEmpty()) {
+            println("cd: missing operand")
+            return
+        }
+
+        val resolvedPath = resolveTargetPath(rawPath) ?: return
+
+        if (!Files.isDirectory(resolvedPath)) {
+            println("cd: $rawPath: No such file or directory")
+            return
+        }
+
+        shellState.currentDirectory = resolvedPath
+    }
+
+    private fun resolveTargetPath(input: String): Path? {
+        if (input == "~") {
+            val home = System.getenv("HOME")
+            if (home.isNullOrEmpty()) {
+                println("cd: HOME environment variable not set")
+                return null
             }
+            return Paths.get(home).normalize()
+        }
 
-        val normalizedTarget = resolvedPath.normalize()
-
-        if (Files.isDirectory(normalizedTarget)) {
-            shellState.currentDirectory = normalizedTarget
+        val path = Paths.get(input)
+        return if (path.isAbsolute) {
+            path.normalize()
         } else {
-            println("cd: $requested: No such file or directory")
+            shellState.currentDirectory.resolve(path).normalize()
         }
     }
 }

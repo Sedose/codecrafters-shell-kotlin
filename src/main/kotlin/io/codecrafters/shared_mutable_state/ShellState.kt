@@ -1,4 +1,4 @@
-package io.codecrafters.state
+package io.codecrafters.shared_mutable_state
 
 import org.springframework.stereotype.Component
 import java.nio.file.Path

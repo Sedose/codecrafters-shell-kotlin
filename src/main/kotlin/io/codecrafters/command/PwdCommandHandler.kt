@@ -1,6 +1,6 @@
 package io.codecrafters.command
 
-import io.codecrafters.state.ShellState
+import io.codecrafters.shared_mutable_state.ShellState
 import org.springframework.stereotype.Component
 
 @Component
