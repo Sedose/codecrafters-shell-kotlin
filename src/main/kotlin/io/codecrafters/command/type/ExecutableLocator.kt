@@ -1,22 +1,20 @@
 package io.codecrafters.command.type
 
-import io.codecrafters.dto.ExecutableFound
 import io.codecrafters.dto.ExecutableLookupResult
-import io.codecrafters.dto.ExecutableNotFound
 import org.springframework.stereotype.Component
 import java.io.File
 
 @Component
 class ExecutableLocator {
     fun findExecutable(executableName: String): ExecutableLookupResult {
-        return (System.getenv("PATH") ?: return ExecutableNotFound)
+        return (System.getenv("PATH") ?: return ExecutableLookupResult.PathVariableNotFound)
             .split(File.pathSeparator)
             .asSequence()
             .filter { it.isNotBlank() }
             .map { resolveCandidateExecutable(it, executableName) }
             .firstOrNull { it.exists() && it.canExecute() }
-            ?.let { ExecutableFound(it.absolutePath) }
-            ?: ExecutableNotFound
+            ?.let { ExecutableLookupResult.ExecutableFound(it.absolutePath) }
+            ?: ExecutableLookupResult.ExecutableNotFound
     }
 
     private fun resolveCandidateExecutable(

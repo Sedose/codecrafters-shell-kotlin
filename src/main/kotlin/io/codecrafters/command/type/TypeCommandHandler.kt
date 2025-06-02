@@ -1,8 +1,7 @@
 package io.codecrafters.command.type
 
 import io.codecrafters.command.CommandHandler
-import io.codecrafters.dto.ExecutableFound
-import io.codecrafters.dto.ExecutableNotFound
+import io.codecrafters.dto.ExecutableLookupResult
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.stereotype.Component
 
@@ -27,8 +26,8 @@ class TypeCommandHandler(
         }
 
         when (val lookupResult = executableLocator.findExecutable(requestedCommand)) {
-            is ExecutableFound -> println("$requestedCommand is ${lookupResult.absolutePath}")
-            ExecutableNotFound -> println("$requestedCommand: not found")
+            is ExecutableLookupResult.ExecutableFound -> println("$requestedCommand is ${lookupResult.absolutePath}")
+            else -> println("$requestedCommand: not found")
         }
     }
 }
