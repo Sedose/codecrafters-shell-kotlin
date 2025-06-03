@@ -36,29 +36,26 @@ class CommandParser {
                     buffer.append(ch)
                     escaping = false
                 }
-
-                ch == '\\' && quoteChar != '\'' -> {
-                    escaping = true
+                ch == '\\' -> {
+                    if (quoteChar == null) {
+                        escaping = true
+                    } else {
+                        buffer.append(ch)
+                    }
                 }
-
-                ch == '\'' || ch == '\"' -> {
+                ch == '\'' || ch == '"' -> {
                     when (quoteChar) {
                         null -> quoteChar = ch
                         ch -> quoteChar = null
                         else -> buffer.append(ch)
                     }
                 }
-
-                ch.isWhitespace() && quoteChar == null -> {
-                    flush()
-                }
-
+                ch.isWhitespace() && quoteChar == null -> flush()
                 else -> buffer.append(ch)
             }
         }
 
         if (escaping) buffer.append('\\')
-
         flush()
         return tokens
     }
