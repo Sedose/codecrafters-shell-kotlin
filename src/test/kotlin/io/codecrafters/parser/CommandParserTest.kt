@@ -122,7 +122,7 @@ class CommandParserTest {
             )
     }
 
-    @ParameterizedTest(name = "{index}: {0}")
+    @ParameterizedTest
     @MethodSource("cases")
     fun parseVariants(case: Case) {
         val parsed = parser.parse(case.input.line)

@@ -21,6 +21,7 @@ class CommandParser {
         val tokens = mutableListOf<String>()
         val buffer = StringBuilder()
         var quoteChar: Char? = null
+        var escaping = false
 
         fun flush() {
             if (buffer.isNotEmpty()) {
@@ -31,31 +32,32 @@ class CommandParser {
 
         input.forEach { ch ->
             when {
+                escaping -> {
+                    buffer.append(ch)
+                    escaping = false
+                }
+
+                ch == '\\' && quoteChar != '\'' -> {
+                    escaping = true
+                }
+
                 ch == '\'' || ch == '\"' -> {
                     when (quoteChar) {
-                        null -> {
-                            quoteChar = ch
-                        }
-                        ch -> {
-                            quoteChar = null
-                        }
-                        else -> {
-                            buffer.append(ch)
-                        }
+                        null -> quoteChar = ch
+                        ch -> quoteChar = null
+                        else -> buffer.append(ch)
                     }
                 }
 
-                ch.isWhitespace() -> {
-                    if (quoteChar != null) {
-                        buffer.append(ch)
-                    } else if (buffer.isNotEmpty()) {
-                        flush()
-                    }
+                ch.isWhitespace() && quoteChar == null -> {
+                    flush()
                 }
 
                 else -> buffer.append(ch)
             }
         }
+
+        if (escaping) buffer.append('\\')
 
         flush()
         return tokens
