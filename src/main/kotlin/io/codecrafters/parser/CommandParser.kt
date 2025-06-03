@@ -7,27 +7,41 @@ data class ParsedCommand(
     val arguments: List<String>,
 )
 
+private data class ParserState(
+    val tokens: List<String>,
+    val currentToken: String,
+    val insideQuotes: Boolean,
+)
+
 @Component
 class CommandParser {
     fun parse(input: String): ParsedCommand {
-        val tokens = mutableListOf<String>()
-        val currentToken = StringBuilder()
-        var insideQuotes = false
-        for (character in input) {
-            when {
-                character == '\'' -> insideQuotes = !insideQuotes
-                character.isWhitespace() && !insideQuotes -> {
-                    if (currentToken.isNotEmpty()) {
-                        tokens.add(currentToken.toString())
-                        currentToken.clear()
-                    }
+        val (tokens, lastToken, _) =
+            input.fold(
+                ParserState(
+                    emptyList(),
+                    "",
+                    false,
+                ),
+            ) { (tokens, currentToken, insideQuotes), char ->
+                when {
+                    char == '\'' ->
+                        ParserState(tokens, currentToken, !insideQuotes)
+
+                    char.isWhitespace() && !insideQuotes ->
+                        if (currentToken.isNotEmpty()) {
+                            ParserState(tokens + currentToken, "", false)
+                        } else {
+                            ParserState(tokens, currentToken, false)
+                        }
+
+                    else ->
+                        ParserState(tokens, currentToken + char, insideQuotes)
                 }
-                else -> currentToken.append(character)
             }
-        }
-        if (currentToken.isNotEmpty()) tokens.add(currentToken.toString())
-        val name = tokens.firstOrNull() ?: ""
-        val args = if (tokens.size > 1) tokens.subList(1, tokens.size) else emptyList()
+        val allTokens = if (lastToken.isNotEmpty()) tokens + lastToken else tokens
+        val name = allTokens.firstOrNull() ?: ""
+        val args = if (allTokens.size > 1) allTokens.drop(1) else emptyList()
         return ParsedCommand(name, args)
     }
 }
