@@ -20,7 +20,7 @@ class CommandParser {
     private fun tokenize(input: String): List<String> {
         val tokens = mutableListOf<String>()
         val buffer = StringBuilder()
-        var quoted = false
+        var quoteChar: Char? = null
 
         fun flush() {
             if (buffer.isNotEmpty()) {
@@ -31,8 +31,28 @@ class CommandParser {
 
         input.forEach { ch ->
             when {
-                ch == '\'' || ch == '\"' -> quoted = !quoted
-                ch.isWhitespace() -> if (quoted) buffer.append(ch) else flush()
+                ch == '\'' || ch == '\"' -> {
+                    when (quoteChar) {
+                        null -> {
+                            quoteChar = ch
+                        }
+                        ch -> {
+                            quoteChar = null
+                        }
+                        else -> {
+                            buffer.append(ch)
+                        }
+                    }
+                }
+
+                ch.isWhitespace() -> {
+                    if (quoteChar != null) {
+                        buffer.append(ch)
+                    } else if (buffer.isNotEmpty()) {
+                        flush()
+                    }
+                }
+
                 else -> buffer.append(ch)
             }
         }

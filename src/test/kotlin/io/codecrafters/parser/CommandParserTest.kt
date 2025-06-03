@@ -1,108 +1,132 @@
 package io.codecrafters.parser
 
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.stream.Stream
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CommandParserTest {
     private val parser = CommandParser()
 
-    @Nested
-    inner class BasicTokenization {
-        @Test
-        fun `parses command without arguments`() {
-            val (commandName, arguments) = parser.parse("exit")
-            assertEquals("exit", commandName)
-            assertTrue(arguments.isEmpty())
-        }
+    data class Input(
+        val line: String,
+    )
 
-        @Test
-        fun `parses command with multiple arguments`() {
-            val result = parser.parse("echo hello world")
-            assertEquals("echo", result.commandName)
-            assertEquals(listOf("hello", "world"), result.arguments)
-        }
+    data class Output(
+        val expectedCommand: String,
+        val expectedArgs: List<String>,
+    )
 
-        @Test
-        fun `ignores leading and trailing whitespace`() {
-            val result = parser.parse("   ls   -l    /tmp   ")
-            assertEquals("ls", result.commandName)
-            assertEquals(listOf("-l", "/tmp"), result.arguments)
-        }
+    data class Case(
+        val description: String,
+        val input: Input,
+        val output: Output,
+    )
+
+    companion object {
+        @JvmStatic
+        fun cases(): Stream<Case> =
+            Stream.of(
+                // basic tokenisation
+                Case(
+                    "no args",
+                    Input("exit"),
+                    Output("exit", emptyList()),
+                ),
+                Case(
+                    "multiple args",
+                    Input("echo hello world"),
+                    Output("echo", listOf("hello", "world")),
+                ),
+                Case(
+                    "leading/trailing whitespace",
+                    Input("   ls   -l    /tmp   "),
+                    Output("ls", listOf("-l", "/tmp")),
+                ),
+                // single‑quote handling
+                Case(
+                    "single quoted token",
+                    Input("echo 'hello world'"),
+                    Output("echo", listOf("hello world")),
+                ),
+                Case(
+                    "multiple single quoted segments",
+                    Input("echo 'hello world' test 'foo bar'"),
+                    Output("echo", listOf("hello world", "test", "foo bar")),
+                ),
+                Case(
+                    "unmatched single quote",
+                    Input("echo 'foo bar"),
+                    Output("echo", listOf("foo bar")),
+                ),
+                // double‑quote handling
+                Case(
+                    "double quoted token",
+                    Input("echo \"hello world\""),
+                    Output("echo", listOf("hello world")),
+                ),
+                Case(
+                    "multiple double quoted segments",
+                    Input("echo \"hello world\" test \"foo bar\""),
+                    Output("echo", listOf("hello world", "test", "foo bar")),
+                ),
+                Case(
+                    "unmatched double quote",
+                    Input("echo \"foo bar"),
+                    Output("echo", listOf("foo bar")),
+                ),
+                // edge cases
+                Case(
+                    "empty input",
+                    Input(""),
+                    Output("", emptyList()),
+                ),
+                Case(
+                    "whitespace only input",
+                    Input("        "),
+                    Output("", emptyList()),
+                ),
+                Case(
+                    "drop first token",
+                    Input("cmd arg1"),
+                    Output("cmd", listOf("arg1")),
+                ),
+                // mixed quoting + whitespace stress
+                Case(
+                    "mixed quote styles: double wraps single",
+                    Input("echo \"hello 'inner' world\""),
+                    Output("echo", listOf("hello 'inner' world")),
+                ),
+                Case(
+                    "mixed quote styles: single wraps double",
+                    Input("echo 'hello \"inner\" world'"),
+                    Output("echo", listOf("hello \"inner\" world")),
+                ),
+                Case(
+                    "consecutive blanks no empties",
+                    Input("echo   a    b"),
+                    Output("echo", listOf("a", "b")),
+                ),
+                Case(
+                    "trailing blanks after quoted arg",
+                    Input("echo 'a b'   "),
+                    Output("echo", listOf("a b")),
+                ),
+                Case(
+                    "leading blanks before quoted arg",
+                    Input("echo    \"foo bar\""),
+                    Output("echo", listOf("foo bar")),
+                ),
+            )
     }
 
-    @Nested
-    inner class SingleQuoting {
-        @Test
-        fun `treats everything inside single quotes as one token`() {
-            val result = parser.parse("echo 'hello world'")
-            assertEquals("echo", result.commandName)
-            assertEquals(listOf("hello world"), result.arguments)
-        }
-
-        @Test
-        fun `handles multiple quoted segments in one line`() {
-            val result = parser.parse("echo 'hello world' test 'foo bar'")
-            assertEquals("echo", result.commandName)
-            assertEquals(listOf("hello world", "test", "foo bar"), result.arguments)
-        }
-
-        @Test
-        fun `handles unmatched single quote at end of line`() {
-            val result = parser.parse("echo 'foo bar")
-            assertEquals("echo", result.commandName)
-            assertEquals(listOf("foo bar"), result.arguments)
-        }
-    }
-
-    @Nested
-    inner class DoubleQuoting {
-        @Test
-        fun `treats everything inside single quotes as one token`() {
-            val result = parser.parse("echo \"hello world\"")
-            assertEquals("echo", result.commandName)
-            assertEquals(listOf("hello world"), result.arguments)
-        }
-
-        @Test
-        fun `handles multiple quoted segments in one line`() {
-            val result = parser.parse("echo \"hello world\" test \"foo bar\"")
-            assertEquals("echo", result.commandName)
-            assertEquals(listOf("hello world", "test", "foo bar"), result.arguments)
-        }
-
-        @Test
-        fun `handles unmatched single quote at end of line`() {
-            val result = parser.parse("echo \"foo bar")
-            assertEquals("echo", result.commandName)
-            assertEquals(listOf("foo bar"), result.arguments)
-        }
-    }
-
-    @Nested
-    inner class EdgeCases {
-        @Test
-        fun `returns empty tokens for empty input`() {
-            val result = parser.parse("")
-            assertEquals("", result.commandName)
-            assertTrue(result.arguments.isEmpty())
-        }
-
-        @Test
-        fun `returns empty tokens for whitespace-only input`() {
-            val result = parser.parse("        ")
-            assertEquals("", result.commandName)
-            assertTrue(result.arguments.isEmpty())
-        }
-
-        @Test
-        fun `drops only the first token as command when more than one token present`() {
-            val result = parser.parse("cmd arg1")
-            assertEquals("cmd", result.commandName)
-            assertEquals(listOf("arg1"), result.arguments)
-        }
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("cases")
+    fun parseVariants(case: Case) {
+        val parsed = parser.parse(case.input.line)
+        assertEquals(case.output.expectedCommand, parsed.commandName)
+        assertEquals(case.output.expectedArgs, parsed.arguments)
     }
 }
