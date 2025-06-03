@@ -16,7 +16,6 @@ class ShellRunner(
 ) : CommandLineRunner {
     override fun run(vararg args: String) {
         while (true) {
-            println("suka pidoras")
             print("$ ")
             val inputLine = readLine() ?: break
             val trimmedInput = inputLine.trim()

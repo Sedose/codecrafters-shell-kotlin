@@ -7,41 +7,37 @@ data class ParsedCommand(
     val arguments: List<String>,
 )
 
-private data class ParserState(
-    val tokens: List<String>,
-    val currentToken: String,
-    val insideQuotes: Boolean,
-)
-
 @Component
 class CommandParser {
-    fun parse(input: String): ParsedCommand {
-        val (tokens, lastToken, _) =
-            input.fold(
-                ParserState(
-                    emptyList(),
-                    "",
-                    false,
-                ),
-            ) { (tokens, currentToken, insideQuotes), char ->
-                when {
-                    char == '\'' ->
-                        ParserState(tokens, currentToken, !insideQuotes)
+    fun parse(line: String): ParsedCommand {
+        val tokens = tokenize(line)
+        return ParsedCommand(
+            commandName = tokens.firstOrNull().orEmpty(),
+            arguments = tokens.drop(1),
+        )
+    }
 
-                    char.isWhitespace() && !insideQuotes ->
-                        if (currentToken.isNotEmpty()) {
-                            ParserState(tokens + currentToken, "", false)
-                        } else {
-                            ParserState(tokens, currentToken, false)
-                        }
+    private fun tokenize(input: String): List<String> {
+        val tokens = mutableListOf<String>()
+        val buffer = StringBuilder()
+        var quoted = false
 
-                    else ->
-                        ParserState(tokens, currentToken + char, insideQuotes)
-                }
+        fun flush() {
+            if (buffer.isNotEmpty()) {
+                tokens += buffer.toString()
+                buffer.clear()
             }
-        val allTokens = if (lastToken.isNotEmpty()) tokens + lastToken else tokens
-        val name = allTokens.firstOrNull() ?: ""
-        val args = if (allTokens.size > 1) allTokens.drop(1) else emptyList()
-        return ParsedCommand(name, args)
+        }
+
+        input.forEach { ch ->
+            when {
+                ch == '\'' || ch == '\"' -> quoted = !quoted
+                ch.isWhitespace() -> if (quoted) buffer.append(ch) else flush()
+                else -> buffer.append(ch)
+            }
+        }
+
+        flush()
+        return tokens
     }
 }
