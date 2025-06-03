@@ -44,6 +44,7 @@ class CommandParser {
                         }
                     }
                 }
+
                 ch.isWhitespace() -> {
                     if (quoteChar != null) {
                         buffer.append(ch)
@@ -51,6 +52,7 @@ class CommandParser {
                         flush()
                     }
                 }
+
                 else -> buffer.append(ch)
             }
         }
