@@ -18,77 +18,64 @@ class CommandParser {
     }
 
     private fun tokenize(input: String): List<String> {
-        val tokens = mutableListOf<String>()
-        val buffer = StringBuilder()
+        data class State(
+            val tokens: List<String>,
+            val buffer: String,
+            val activeQuote: Char?,
+            val escapingOutsideQuotes: Boolean,
+            val skipNext: Boolean,
+        )
 
-        var activeQuote: Char? = null          // either '\'' or '"' while inside quotes
-        var escapingOutsideQuotes = false      // \  …when we’re **not** inside any quotes
-        var i = 0
+        fun State.addBufferedToken(): State =
+            if (buffer.isNotEmpty()) copy(tokens = tokens + buffer, buffer = "") else this
 
-        fun flushCurrentToken() {
-            if (buffer.isNotEmpty()) {
-                tokens += buffer.toString()
-                buffer.clear()
-            }
-        }
+        val initialState = State(
+            tokens = emptyList(),
+            buffer = "",
+            activeQuote = null,
+            escapingOutsideQuotes = false,
+            skipNext = false,
+        )
 
-        while (i < input.length) {
-            val ch = input[i]
-
+        val finishedState = input.foldIndexed(initialState) { index, state, ch ->
             when {
-                /* ------------------------------------------------------------
-                 * 1. backslash handling outside any quotes
-                 * ------------------------------------------------------------ */
-                escapingOutsideQuotes -> {
-                    buffer.append(ch)
-                    escapingOutsideQuotes = false
-                }
+                state.skipNext ->
+                    state.copy(skipNext = false)
 
-                activeQuote == null && ch == '\\' -> {
-                    escapingOutsideQuotes = true
-                }
+                state.escapingOutsideQuotes ->
+                    state.copy(buffer = state.buffer + ch, escapingOutsideQuotes = false)
 
-                /* ------------------------------------------------------------
-                 * 2. backslash handling **inside** double quotes
-                 *    (preserve its special meaning only before \, $, " or \n)
-                 * ------------------------------------------------------------ */
-                activeQuote == '"' && ch == '\\' -> {
-                    val next = input.getOrNull(i + 1)
+                state.activeQuote == null && ch == '\\' ->
+                    state.copy(escapingOutsideQuotes = true)
+
+                state.activeQuote == '"' && ch == '\\' -> {
+                    val next = input.getOrNull(index + 1)
                     if (next == '\\' || next == '"' || next == '$' || next == '\n') {
-                        buffer.append(next)
-                        i++                               // skip the escaped char
+                        state.copy(buffer = state.buffer + next, skipNext = true)
                     } else {
-                        buffer.append(ch)                 // treat the \ literally
+                        state.copy(buffer = state.buffer + ch)
                     }
                 }
 
-                /* ------------------------------------------------------------
-                 * 3. quote open / close
-                 * ------------------------------------------------------------ */
-                ch == '\'' || ch == '"' -> {
-                    when (activeQuote) {
-                        null -> activeQuote = ch          // opening quote
-                        ch   -> activeQuote = null        // closing the same quote
-                        else -> buffer.append(ch)         // quote char inside other quotes
-                    }
+                ch == '\'' || ch == '"' -> when (state.activeQuote) {
+                    null -> state.copy(activeQuote = ch)
+                    ch -> state.copy(activeQuote = null)
+                    else -> state.copy(buffer = state.buffer + ch)
                 }
 
-                /* ------------------------------------------------------------
-                 * 4. token boundary on unquoted whitespace
-                 * ------------------------------------------------------------ */
-                ch.isWhitespace() && activeQuote == null -> flushCurrentToken()
+                ch.isWhitespace() && state.activeQuote == null ->
+                    state.addBufferedToken()
 
-                /* ------------------------------------------------------------
-                 * 5. regular character
-                 * ------------------------------------------------------------ */
-                else -> buffer.append(ch)
+                else ->
+                    state.copy(buffer = state.buffer + ch)
             }
-
-            i++
+        }.let { endState ->
+            val withDanglingBackslash =
+                if (endState.escapingOutsideQuotes) endState.copy(buffer = endState.buffer + '\\')
+                else endState
+            withDanglingBackslash.addBufferedToken()
         }
 
-        if (escapingOutsideQuotes) buffer.append('\\')    // dangling backslash at EOL
-        flushCurrentToken()
-        return tokens
+        return finishedState.tokens
     }
 }

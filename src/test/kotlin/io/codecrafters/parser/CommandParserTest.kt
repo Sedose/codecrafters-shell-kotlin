@@ -150,6 +150,31 @@ class CommandParserTest {
                     Input("""echo \"quoted\""""),
                     Output("echo", listOf(""""quoted"""")),
                 ),
+                Case(
+                    "escaped backslash in double quotes",
+                    Input("""echo "foo\\\\bar""""),  // echo "foo\\bar"
+                    Output("echo", listOf("""foo\\bar""")),
+                ),
+                Case(
+                    "escaped quote in double quotes",
+                    Input("""echo "she said \"hello\"""""),  // echo "she said \"hello\""
+                    Output("echo", listOf("""she said "hello"""")),
+                ),
+                Case(
+                    "escaped dollar in double quotes",
+                    Input("""echo "price is \$100""""),  // echo "price is \$100"
+                    Output("echo", listOf("""price is $100""")),
+                ),
+                Case(
+                    "backslash before non-special char in double quotes",
+                    Input("""echo "foo\qbar""""),  // echo "foo\qbar"
+                    Output("echo", listOf("""foo\qbar""")),
+                ),
+                Case(
+                    "escaped quote outside of quotes",
+                    Input("""echo \"hello\""""),  // echo "hello"
+                    Output("echo", listOf("\"hello\"")),
+                ),
             )
     }
 
