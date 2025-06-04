@@ -37,37 +37,37 @@ class CommandParser {
             skipNext = false,
         )
 
-        val finishedState = input.foldIndexed(initialState) { index, state, ch ->
+        val finishedState = input.foldIndexed(initialState) { index, state, currentChar ->
             when {
                 state.skipNext ->
                     state.copy(skipNext = false)
 
                 state.escapingOutsideQuotes ->
-                    state.copy(buffer = state.buffer + ch, escapingOutsideQuotes = false)
+                    state.copy(buffer = state.buffer + currentChar, escapingOutsideQuotes = false)
 
-                state.activeQuote == null && ch == '\\' ->
+                state.activeQuote == null && currentChar == '\\' ->
                     state.copy(escapingOutsideQuotes = true)
 
-                state.activeQuote == '"' && ch == '\\' -> {
+                state.activeQuote == '"' && currentChar == '\\' -> {
                     val next = input.getOrNull(index + 1)
                     if (next == '\\' || next == '"' || next == '$' || next == '\n') {
                         state.copy(buffer = state.buffer + next, skipNext = true)
                     } else {
-                        state.copy(buffer = state.buffer + ch)
+                        state.copy(buffer = state.buffer + currentChar)
                     }
                 }
 
-                ch == '\'' || ch == '"' -> when (state.activeQuote) {
-                    null -> state.copy(activeQuote = ch)
-                    ch -> state.copy(activeQuote = null)
-                    else -> state.copy(buffer = state.buffer + ch)
+                currentChar == '\'' || currentChar == '"' -> when (state.activeQuote) {
+                    null -> state.copy(activeQuote = currentChar)
+                    currentChar -> state.copy(activeQuote = null)
+                    else -> state.copy(buffer = state.buffer + currentChar)
                 }
 
-                ch.isWhitespace() && state.activeQuote == null ->
+                currentChar.isWhitespace() && state.activeQuote == null ->
                     state.addBufferedToken()
 
                 else ->
-                    state.copy(buffer = state.buffer + ch)
+                    state.copy(buffer = state.buffer + currentChar)
             }
         }.let { endState ->
             val withDanglingBackslash =
