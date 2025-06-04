@@ -20,43 +20,75 @@ class CommandParser {
     private fun tokenize(input: String): List<String> {
         val tokens = mutableListOf<String>()
         val buffer = StringBuilder()
-        var quoteChar: Char? = null
-        var escaping = false
 
-        fun flush() {
+        var activeQuote: Char? = null          // either '\'' or '"' while inside quotes
+        var escapingOutsideQuotes = false      // \  …when we’re **not** inside any quotes
+        var i = 0
+
+        fun flushCurrentToken() {
             if (buffer.isNotEmpty()) {
                 tokens += buffer.toString()
                 buffer.clear()
             }
         }
 
-        input.forEach { ch ->
+        while (i < input.length) {
+            val ch = input[i]
+
             when {
-                escaping -> {
+                /* ------------------------------------------------------------
+                 * 1. backslash handling outside any quotes
+                 * ------------------------------------------------------------ */
+                escapingOutsideQuotes -> {
                     buffer.append(ch)
-                    escaping = false
+                    escapingOutsideQuotes = false
                 }
-                ch == '\\' -> {
-                    if (quoteChar == null) {
-                        escaping = true
+
+                activeQuote == null && ch == '\\' -> {
+                    escapingOutsideQuotes = true
+                }
+
+                /* ------------------------------------------------------------
+                 * 2. backslash handling **inside** double quotes
+                 *    (preserve its special meaning only before \, $, " or \n)
+                 * ------------------------------------------------------------ */
+                activeQuote == '"' && ch == '\\' -> {
+                    val next = input.getOrNull(i + 1)
+                    if (next == '\\' || next == '"' || next == '$' || next == '\n') {
+                        buffer.append(next)
+                        i++                               // skip the escaped char
                     } else {
-                        buffer.append(ch)
+                        buffer.append(ch)                 // treat the \ literally
                     }
                 }
+
+                /* ------------------------------------------------------------
+                 * 3. quote open / close
+                 * ------------------------------------------------------------ */
                 ch == '\'' || ch == '"' -> {
-                    when (quoteChar) {
-                        null -> quoteChar = ch
-                        ch -> quoteChar = null
-                        else -> buffer.append(ch)
+                    when (activeQuote) {
+                        null -> activeQuote = ch          // opening quote
+                        ch   -> activeQuote = null        // closing the same quote
+                        else -> buffer.append(ch)         // quote char inside other quotes
                     }
                 }
-                ch.isWhitespace() && quoteChar == null -> flush()
+
+                /* ------------------------------------------------------------
+                 * 4. token boundary on unquoted whitespace
+                 * ------------------------------------------------------------ */
+                ch.isWhitespace() && activeQuote == null -> flushCurrentToken()
+
+                /* ------------------------------------------------------------
+                 * 5. regular character
+                 * ------------------------------------------------------------ */
                 else -> buffer.append(ch)
             }
+
+            i++
         }
 
-        if (escaping) buffer.append('\\')
-        flush()
+        if (escapingOutsideQuotes) buffer.append('\\')    // dangling backslash at EOL
+        flushCurrentToken()
         return tokens
     }
 }
