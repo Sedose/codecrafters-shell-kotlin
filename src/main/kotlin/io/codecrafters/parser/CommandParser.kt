@@ -1,19 +1,22 @@
 package io.codecrafters.parser
 
+import io.codecrafters.dto.ParsedCommand
 import org.springframework.stereotype.Component
-
-data class ParsedCommand(
-    val commandName: String,
-    val arguments: List<String>,
-)
 
 @Component
 class CommandParser {
     fun parse(line: String): ParsedCommand {
         val tokens = tokenize(line)
+        val redirectIndex = tokens.indexOfFirst { it == ">" || it == "1>" }.takeUnless { it == -1 }
+        val redirectTarget = tokens.getOrNull((redirectIndex ?: Int.MIN_VALUE) + 1)
+        val cleanedTokens =
+            redirectIndex?.let { index ->
+                tokens.filterIndexed { i, _ -> i != index && i != index + 1 }
+            } ?: tokens
         return ParsedCommand(
-            commandName = tokens.firstOrNull().orEmpty(),
-            arguments = tokens.drop(1),
+            commandName = cleanedTokens.firstOrNull().orEmpty(),
+            arguments = cleanedTokens.drop(1),
+            stdoutRedirect = redirectTarget,
         )
     }
 

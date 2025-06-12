@@ -6,6 +6,8 @@ import io.codecrafters.dto.ExternalProgramSuccess
 import io.codecrafters.shared_mutable_state.ShellState
 import org.springframework.stereotype.Component
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
 
 @Component
 class ExternalProgramExecutor(
@@ -14,24 +16,28 @@ class ExternalProgramExecutor(
     fun execute(
         commandName: String,
         arguments: List<String>,
+        stdoutRedirect: Path? = null,
     ): ExternalProgramExecutionResult {
         val commandWithArguments = listOf(commandName) + arguments
+        val builder =
+            ProcessBuilder(commandWithArguments)
+                .directory(shellState.currentDirectory.toFile())
+
+        if (stdoutRedirect == null) {
+            builder.redirectErrorStream(true)
+        } else {
+            stdoutRedirect.parent?.let { Files.createDirectories(it) }
+            builder.redirectOutput(stdoutRedirect.toFile())
+            builder.redirectError(ProcessBuilder.Redirect.INHERIT)
+        }
 
         return try {
-            val process =
-                ProcessBuilder(commandWithArguments)
-                    .directory(shellState.currentDirectory.toFile())
-                    .redirectErrorStream(true)
-                    .start()
+            val process = builder.start()
 
-            process.inputStream.bufferedReader().useLines { outputLines ->
-                for (outputLine in outputLines) {
-                    println(outputLine)
-                }
+            if (stdoutRedirect == null) {
+                process.inputStream.bufferedReader().forEachLine { println(it) }
             }
-
-            val exitCode = process.waitFor()
-            ExternalProgramSuccess(exitCode)
+            ExternalProgramSuccess(process.waitFor())
         } catch (_: IOException) {
             ExternalProgramNotFound(commandName)
         }
