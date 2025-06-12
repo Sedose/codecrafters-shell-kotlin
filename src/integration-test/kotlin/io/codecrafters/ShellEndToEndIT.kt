@@ -121,6 +121,18 @@ class ShellEndToEndIT {
         assertTrue(expected in result.consoleOutput)
     }
 
+    @Test
+    fun invalidCommandPrintsErrorMessage() {
+        val result =
+            runSession(
+                """
+            invalid_command
+            exit
+        """,
+            )
+        assertTrue("invalid_command: not found" in result.consoleOutput)
+    }
+
     fun runSession(script: String): SessionResult {
         val originalInputStream: InputStream = System.`in`
         val originalPrintStream: PrintStream = System.out

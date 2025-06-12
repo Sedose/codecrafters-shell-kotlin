@@ -10,6 +10,6 @@ class ExitCommandHandler(
     override val commandName = "exit"
 
     override fun handle(arguments: List<String>) {
-        exitExecutor.exit(arguments.first().toIntOrNull() ?: 0)
+        exitExecutor.exit(arguments.firstOrNull()?.toIntOrNull() ?: 0)
     }
 }

@@ -26,15 +26,11 @@ class ExternalProgramExecutor(
         if (stdoutRedirect != null) {
             stdoutRedirect.parent?.let(Files::createDirectories)
             builder.redirectOutput(stdoutRedirect.toFile())
-        } else {
-            builder.redirectOutput(ProcessBuilder.Redirect.PIPE)
         }
 
         if (stderrRedirect != null) {
             stderrRedirect.parent?.let(Files::createDirectories)
             builder.redirectError(stderrRedirect.toFile())
-        } else {
-            builder.redirectError(ProcessBuilder.Redirect.PIPE)
         }
 
         return try {
