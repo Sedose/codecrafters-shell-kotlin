@@ -17,26 +17,36 @@ class ExternalProgramExecutor(
         commandName: String,
         arguments: List<String>,
         stdoutRedirect: Path? = null,
+        stderrRedirect: Path? = null,
     ): ExternalProgramExecutionResult {
-        val commandWithArguments = listOf(commandName) + arguments
-        val builder =
-            ProcessBuilder(commandWithArguments)
-                .directory(shellState.currentDirectory.toFile())
 
-        if (stdoutRedirect == null) {
-            builder.redirectErrorStream(true)
-        } else {
-            stdoutRedirect.parent?.let { Files.createDirectories(it) }
+        val builder = ProcessBuilder(listOf(commandName) + arguments)
+            .directory(shellState.currentDirectory.toFile())
+
+        if (stdoutRedirect != null) {
+            stdoutRedirect.parent?.let(Files::createDirectories)
             builder.redirectOutput(stdoutRedirect.toFile())
-            builder.redirectError(ProcessBuilder.Redirect.INHERIT)
+        } else {
+            builder.redirectOutput(ProcessBuilder.Redirect.PIPE)
+        }
+
+        if (stderrRedirect != null) {
+            stderrRedirect.parent?.let(Files::createDirectories)
+            builder.redirectError(stderrRedirect.toFile())
+        } else {
+            builder.redirectError(ProcessBuilder.Redirect.PIPE)
         }
 
         return try {
             val process = builder.start()
 
             if (stdoutRedirect == null) {
-                process.inputStream.bufferedReader().forEachLine { println(it) }
+                process.inputStream.bufferedReader().forEachLine(::println)
             }
+            if (stderrRedirect == null) {
+                process.errorStream.bufferedReader().forEachLine(System.err::println)
+            }
+
             ExternalProgramSuccess(process.waitFor())
         } catch (_: IOException) {
             ExternalProgramNotFound(commandName)

@@ -8,6 +8,7 @@ import io.codecrafters.parser.CommandParser
 import io.codecrafters.shared_mutable_state.ShellState
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
+import java.io.FileDescriptor
 import java.io.FileOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
@@ -39,7 +40,7 @@ class ShellRunner(
         val parsed = commandParser.parse(input)
         val handler = commandHandlerMap[parsed.commandName]
 
-        if (parsed.stdoutRedirect != null) {
+        if (parsed.stdoutRedirect != null || parsed.stderrRedirect != null) {
             executeWithRedirection(handler, parsed)
         } else {
             executeDirectly(handler, parsed)
@@ -48,16 +49,20 @@ class ShellRunner(
 
     private fun executeDirectly(handler: CommandHandler?, parsed: ParsedCommand) {
         handler?.handle(parsed.arguments)
-            ?: executeExternalCommand(parsed.commandName, parsed.arguments, null)
+            ?: executeExternalCommand(parsed.commandName, parsed.arguments, null, null)
     }
 
-    private fun executeWithRedirection(handler: CommandHandler?, parsed: ParsedCommand) {
-        val redirectTarget = prepareRedirectTarget(parsed.stdoutRedirect!!)
+    private fun executeWithRedirection(
+        handler: CommandHandler?,
+        parsed: ParsedCommand,
+    ) {
+        val stdoutTarget = parsed.stdoutRedirect?.let(::prepareRedirectTarget)
+        val stderrTarget = parsed.stderrRedirect?.let(::prepareRedirectTarget)
 
         if (handler != null) {
-            executeBuiltinWithRedirection(handler, parsed.arguments, redirectTarget)
+            executeBuiltinWithRedirection(handler, parsed.arguments, stdoutTarget, stderrTarget)
         } else {
-            executeExternalCommand(parsed.commandName, parsed.arguments, redirectTarget)
+            executeExternalCommand(parsed.commandName, parsed.arguments, stdoutTarget, stderrTarget)
         }
     }
 
@@ -70,16 +75,24 @@ class ShellRunner(
     private fun executeBuiltinWithRedirection(
         handler: CommandHandler,
         arguments: List<String>,
-        target: Path,
+        stdoutTarget: Path?,
+        stderrTarget: Path?,
     ) {
         val originalOut = System.out
+        val originalErr = System.err
+
+        val newOut = stdoutTarget?.let { PrintStream(FileOutputStream(it.toFile())) }
+        val newErr = stderrTarget?.let { PrintStream(FileOutputStream(it.toFile())) }
+
         try {
-            FileOutputStream(target.toFile()).use { fos ->
-                System.setOut(PrintStream(fos))
-                handler.handle(arguments)
-            }
+            newOut?.let(System::setOut)
+            newErr?.let(System::setErr)
+            handler.handle(arguments)
         } finally {
+            newOut?.close()
+            newErr?.close()
             System.setOut(originalOut)
+            System.setErr(originalErr)
         }
     }
 
@@ -87,8 +100,9 @@ class ShellRunner(
         commandName: String,
         arguments: List<String>,
         stdoutRedirect: Path?,
+        stderrRedirect: Path?,
     ) {
-        val result = externalProgramExecutor.execute(commandName, arguments, stdoutRedirect)
+        val result = externalProgramExecutor.execute(commandName, arguments, stdoutRedirect, stderrRedirect)
         if (result is ExternalProgramNotFound) {
             println("$commandName: not found")
         }

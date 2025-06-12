@@ -7,16 +7,34 @@ import org.springframework.stereotype.Component
 class CommandParser {
     fun parse(line: String): ParsedCommand {
         val tokens = tokenize(line)
-        val redirectIndex = tokens.indexOfFirst { it == ">" || it == "1>" }.takeUnless { it == -1 }
-        val redirectTarget = tokens.getOrNull((redirectIndex ?: Int.MIN_VALUE) + 1)
-        val cleanedTokens =
-            redirectIndex?.let { index ->
-                tokens.filterIndexed { i, _ -> i != index && i != index + 1 }
-            } ?: tokens
+
+        var stdoutRedirect: String? = null
+        var stderrRedirect: String? = null
+        val cleaned = mutableListOf<String>()
+
+        var i = 0
+        while (i < tokens.size) {
+            when (tokens[i]) {
+                ">", "1>" -> {
+                    stdoutRedirect = tokens.getOrNull(i + 1)
+                    i += 2
+                }
+                "2>" -> {
+                    stderrRedirect = tokens.getOrNull(i + 1)
+                    i += 2
+                }
+                else -> {
+                    cleaned += tokens[i]
+                    i++
+                }
+            }
+        }
+
         return ParsedCommand(
-            commandName = cleanedTokens.firstOrNull().orEmpty(),
-            arguments = cleanedTokens.drop(1),
-            stdoutRedirect = redirectTarget,
+            commandName = cleaned.firstOrNull().orEmpty(),
+            arguments = cleaned.drop(1),
+            stdoutRedirect = stdoutRedirect,
+            stderrRedirect = stderrRedirect,
         )
     }
 
